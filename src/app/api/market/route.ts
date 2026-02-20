@@ -45,15 +45,21 @@ export async function GET() {
     result.crypto = { error: e instanceof Error ? e.message : 'Failed' }
   }
 
-  // Metals — this one can be flaky from serverless
+  // Metals — Swissquote free feed (no API key, serverless-friendly)
   try {
-    const metalsData = await fetchJSON('https://data-asg.goldprice.org/dbXRates/USD')
-    const item = metalsData.items?.[0]
+    const [goldData, silverData] = await Promise.all([
+      fetchJSON('https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD'),
+      fetchJSON('https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAG/USD'),
+    ])
+    const goldBid = goldData[0]?.spreadProfilePrices?.[0]?.bid
+    const goldAsk = goldData[0]?.spreadProfilePrices?.[0]?.ask
+    const silverBid = silverData[0]?.spreadProfilePrices?.[0]?.bid
+    const silverAsk = silverData[0]?.spreadProfilePrices?.[0]?.ask
     result.metals = {
-      goldPrice: item?.xauPrice ?? null,
-      silverPrice: item?.xagPrice ?? null,
-      goldChange: item?.pcXau ?? null,
-      silverChange: item?.pcXag ?? null,
+      goldPrice: goldBid && goldAsk ? Math.round(((goldBid + goldAsk) / 2) * 100) / 100 : null,
+      silverPrice: silverBid && silverAsk ? Math.round(((silverBid + silverAsk) / 2) * 1000) / 1000 : null,
+      goldChange: null,
+      silverChange: null,
     }
   } catch (e: unknown) {
     result.metals = { error: e instanceof Error ? e.message : 'Failed' }
