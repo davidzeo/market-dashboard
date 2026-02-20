@@ -1,0 +1,122 @@
+:root {
+  --bg: #0a0a0f;
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --text: #e0e0e0;
+  --text-bright: #fff;
+  --text-dim: rgba(255,255,255,0.4);
+  --green: #34d399;
+  --red: #f87171;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.header h1 {
+  font-size: 26px;
+  color: var(--text-bright);
+  letter-spacing: 0.5px;
+}
+
+.updated {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.card-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.value {
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.change {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.up { color: var(--green); }
+.down { color: var(--red); }
+
+.loading-text {
+  opacity: 0.3;
+  font-size: 13px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.error-text {
+  color: var(--red);
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
