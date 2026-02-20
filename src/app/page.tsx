@@ -2,31 +2,40 @@
 
 import { useEffect, useState, useCallback } from 'react'
 
+interface CryptoData {
+  btcUSD: number; ethUSD: number
+  btcCAD: number; ethCAD: number
+  btcChange: number | null; ethChange: number | null
+  error?: string
+}
+
+interface ForexData {
+  usdCAD: number; usdCNY: number; cadCNY: number
+  usdJPY: number; eurUSD: number
+  error?: string
+}
+
+interface MetalsData {
+  goldPrice: number; silverPrice: number
+  goldChange: number | null; silverChange: number | null
+  error?: string
+}
+
 interface MarketData {
-  crypto: {
-    btcUSD: number; ethUSD: number
-    btcCAD: number; ethCAD: number
-    btcChange: number | null; ethChange: number | null
-  }
-  forex: {
-    usdCAD: number; usdCNY: number; cadCNY: number
-    usdJPY: number; eurUSD: number
-  }
-  metals: {
-    goldPrice: number; silverPrice: number
-    goldChange: number | null; silverChange: number | null
-  }
+  crypto: CryptoData
+  forex: ForexData
+  metals: MetalsData
   timestamp: string
 }
 
 const REFRESH_MS = 3 * 60 * 1000
 
-function fmt(n: number | null, decimals = 2): string {
+function fmt(n: number | null | undefined, decimals = 2): string {
   if (n == null) return '—'
   return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
 
-function Change({ pct }: { pct: number | null }) {
+function Change({ pct }: { pct: number | null | undefined }) {
   if (pct == null) return null
   const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : ''
   const sign = pct > 0 ? '+' : ''
@@ -37,7 +46,7 @@ function Item({ label, value, change }: { label: string; value: string; change?:
   return (
     <div className="item">
       <span className="label">{label}</span>
-      <span className="value">{value}<Change pct={change ?? null} /></span>
+      <span className="value">{value}<Change pct={change} /></span>
     </div>
   )
 }
@@ -51,7 +60,7 @@ export default function Home() {
     try {
       const res = await fetch('/api/market')
       if (!res.ok) throw new Error(`API returned ${res.status}`)
-      const json: MarketData = await res.json()
+      const json = await res.json()
       setData(json)
       setError(null)
       setUpdatedAt(new Date().toLocaleString())
@@ -79,37 +88,40 @@ export default function Home() {
       <div className="grid">
         <div className="card">
           <div className="card-title">🪙 Crypto</div>
-          {data ? (
-            <>
-              <Item label="BTC/CAD" value={'$' + fmt(data.crypto.btcCAD, 0)} change={data.crypto.btcChange} />
-              <Item label="ETH/CAD" value={'$' + fmt(data.crypto.ethCAD, 2)} change={data.crypto.ethChange} />
-              <Item label="BTC/USD" value={'$' + fmt(data.crypto.btcUSD, 0)} />
-              <Item label="ETH/USD" value={'$' + fmt(data.crypto.ethUSD, 2)} />
-            </>
-          ) : <div className="loading-text">Fetching...</div>}
+          {!data ? <div className="loading-text">Fetching...</div>
+            : data.crypto.error ? <div className="error-text">{data.crypto.error}</div>
+            : <>
+                <Item label="BTC/CAD" value={'$' + fmt(data.crypto.btcCAD, 0)} change={data.crypto.btcChange} />
+                <Item label="ETH/CAD" value={'$' + fmt(data.crypto.ethCAD, 2)} change={data.crypto.ethChange} />
+                <Item label="BTC/USD" value={'$' + fmt(data.crypto.btcUSD, 0)} />
+                <Item label="ETH/USD" value={'$' + fmt(data.crypto.ethUSD, 2)} />
+              </>
+          }
         </div>
 
         <div className="card">
           <div className="card-title">💱 Forex</div>
-          {data ? (
-            <>
-              <Item label="USD/CAD" value={fmt(data.forex.usdCAD, 4)} />
-              <Item label="USD/CNY" value={fmt(data.forex.usdCNY, 4)} />
-              <Item label="CAD/CNY" value={fmt(data.forex.cadCNY, 4)} />
-              <Item label="USD/JPY" value={fmt(data.forex.usdJPY, 2)} />
-              <Item label="EUR/USD" value={fmt(data.forex.eurUSD, 4)} />
-            </>
-          ) : <div className="loading-text">Fetching...</div>}
+          {!data ? <div className="loading-text">Fetching...</div>
+            : data.forex.error ? <div className="error-text">{data.forex.error}</div>
+            : <>
+                <Item label="USD/CAD" value={fmt(data.forex.usdCAD, 4)} />
+                <Item label="USD/CNY" value={fmt(data.forex.usdCNY, 4)} />
+                <Item label="CAD/CNY" value={fmt(data.forex.cadCNY, 4)} />
+                <Item label="USD/JPY" value={fmt(data.forex.usdJPY, 2)} />
+                <Item label="EUR/USD" value={fmt(data.forex.eurUSD, 4)} />
+              </>
+          }
         </div>
 
         <div className="card">
           <div className="card-title">🥇 Metals (USD/oz)</div>
-          {data ? (
-            <>
-              <Item label="Gold" value={'$' + fmt(data.metals.goldPrice, 2)} change={data.metals.goldChange} />
-              <Item label="Silver" value={'$' + fmt(data.metals.silverPrice, 2)} change={data.metals.silverChange} />
-            </>
-          ) : <div className="loading-text">Fetching...</div>}
+          {!data ? <div className="loading-text">Fetching...</div>
+            : data.metals.error ? <div className="error-text">{data.metals.error}</div>
+            : <>
+                <Item label="Gold" value={'$' + fmt(data.metals.goldPrice, 2)} change={data.metals.goldChange} />
+                <Item label="Silver" value={'$' + fmt(data.metals.silverPrice, 2)} change={data.metals.silverChange} />
+              </>
+          }
         </div>
       </div>
 
