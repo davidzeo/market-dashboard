@@ -26,22 +26,23 @@ export async function GET() {
     result.forex = { error: e instanceof Error ? e.message : 'Failed' }
   }
 
-  // Crypto — Binance (reliable, no API key, generous rate limits)
+  // Crypto — Coinbase Exchange (US-based, no API key, no geo-blocking)
   try {
-    const cryptoData = await fetchJSON(
-      'https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22%5D'
-    )
-    const btc = cryptoData.find((t: { symbol: string }) => t.symbol === 'BTCUSDT')
-    const eth = cryptoData.find((t: { symbol: string }) => t.symbol === 'ETHUSDT')
-    const btcUSD = parseFloat(btc.lastPrice)
-    const ethUSD = parseFloat(eth.lastPrice)
+    const [btc, eth] = await Promise.all([
+      fetchJSON('https://api.exchange.coinbase.com/products/BTC-USD/stats'),
+      fetchJSON('https://api.exchange.coinbase.com/products/ETH-USD/stats'),
+    ])
+    const btcUSD = parseFloat(btc.last)
+    const ethUSD = parseFloat(eth.last)
+    const btcOpen = parseFloat(btc.open)
+    const ethOpen = parseFloat(eth.open)
     result.crypto = {
       btcUSD,
       ethUSD,
       btcCAD: Math.round(btcUSD * cadRate * 100) / 100,
       ethCAD: Math.round(ethUSD * cadRate * 100) / 100,
-      btcChange: parseFloat(btc.priceChangePercent),
-      ethChange: parseFloat(eth.priceChangePercent),
+      btcChange: Math.round(((btcUSD - btcOpen) / btcOpen) * 10000) / 100,
+      ethChange: Math.round(((ethUSD - ethOpen) / ethOpen) * 10000) / 100,
     }
   } catch (e: unknown) {
     result.crypto = { error: e instanceof Error ? e.message : 'Failed' }
