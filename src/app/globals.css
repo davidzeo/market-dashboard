@@ -1,12 +1,12 @@
 :root {
-  --bg: #0a0a0f;
-  --card-bg: rgba(255,255,255,0.04);
-  --card-border: rgba(255,255,255,0.08);
-  --text: #e0e0e0;
-  --text-bright: #fff;
-  --text-dim: rgba(255,255,255,0.4);
-  --green: #34d399;
-  --red: #f87171;
+  --bg: #ffffff;
+  --card-bg: #f7f7f8;
+  --card-border: #e5e5e5;
+  --text: #333333;
+  --text-bright: #111111;
+  --text-dim: #999999;
+  --green: #16a34a;
+  --red: #dc2626;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -67,7 +67,7 @@ body {
   justify-content: space-between;
   align-items: baseline;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid #eeeeee;
 }
 
 .item:last-child {
@@ -76,7 +76,7 @@ body {
 
 .label {
   font-size: 13px;
-  opacity: 0.7;
+  color: #666666;
 }
 
 .value {
@@ -98,7 +98,7 @@ body {
 .down { color: var(--red); }
 
 .loading-text {
-  opacity: 0.3;
+  color: var(--text-dim);
   font-size: 13px;
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -106,7 +106,6 @@ body {
 .error-text {
   color: var(--red);
   font-size: 12px;
-  opacity: 0.7;
 }
 
 .footer {
@@ -117,6 +116,6 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
 }

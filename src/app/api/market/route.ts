@@ -9,7 +9,7 @@ async function fetchJSON(url: string) {
 export async function GET() {
   const result: Record<string, unknown> = { timestamp: new Date().toISOString() }
 
-  // Forex — usually reliable
+  // Forex
   let cadRate = 1.44
   try {
     const forexData = await fetchJSON('https://open.er-api.com/v6/latest/USD')
@@ -26,7 +26,7 @@ export async function GET() {
     result.forex = { error: e instanceof Error ? e.message : 'Failed' }
   }
 
-  // Crypto — Coinbase Exchange (US-based, no API key, no geo-blocking)
+  // Crypto — Coinbase Exchange
   try {
     const [btc, eth] = await Promise.all([
       fetchJSON('https://api.exchange.coinbase.com/products/BTC-USD/stats'),
@@ -48,7 +48,7 @@ export async function GET() {
     result.crypto = { error: e instanceof Error ? e.message : 'Failed' }
   }
 
-  // Metals — Swissquote free feed (no API key, serverless-friendly)
+  // Metals — Swissquote
   try {
     const [goldData, silverData] = await Promise.all([
       fetchJSON('https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD'),
@@ -66,6 +66,43 @@ export async function GET() {
     }
   } catch (e: unknown) {
     result.metals = { error: e instanceof Error ? e.message : 'Failed' }
+  }
+
+  // Volatility — CBOE
+  try {
+    const [vixData, vxnData] = await Promise.all([
+      fetchJSON('https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json'),
+      fetchJSON('https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VXN.json'),
+    ])
+    result.volatility = {
+      vix: vixData.data.current_price,
+      vixChange: vixData.data.price_change_percent || null,
+      vxn: vxnData.data.current_price,
+      vxnChange: vxnData.data.price_change_percent || null,
+    }
+  } catch (e: unknown) {
+    result.volatility = { error: e instanceof Error ? e.message : 'Failed' }
+  }
+
+  // Brent Oil — EIA (daily, free demo key)
+  try {
+    const oilData = await fetchJSON(
+      'https://api.eia.gov/v2/petroleum/pri/spt/data/?api_key=DEMO_KEY&frequency=daily&data[0]=value&facets[product][]=EPCBRENT&sort[0][column]=period&sort[0][direction]=desc&length=2'
+    )
+    const rows = oilData.response?.data
+    if (rows && rows.length > 0) {
+      const latest = parseFloat(rows[0].value)
+      const prev = rows.length > 1 ? parseFloat(rows[1].value) : null
+      result.oil = {
+        brentPrice: latest,
+        brentChange: prev ? Math.round(((latest - prev) / prev) * 10000) / 100 : null,
+        brentDate: rows[0].period,
+      }
+    } else {
+      result.oil = { error: 'No data' }
+    }
+  } catch (e: unknown) {
+    result.oil = { error: e instanceof Error ? e.message : 'Failed' }
   }
 
   return NextResponse.json(result)

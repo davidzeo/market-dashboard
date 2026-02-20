@@ -2,29 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react'
 
-interface CryptoData {
-  btcUSD: number; ethUSD: number
-  btcCAD: number; ethCAD: number
-  btcChange: number | null; ethChange: number | null
-  error?: string
-}
-
-interface ForexData {
-  usdCAD: number; usdCNY: number; cadCNY: number
-  usdJPY: number; eurUSD: number
-  error?: string
-}
-
-interface MetalsData {
-  goldPrice: number; silverPrice: number
-  goldChange: number | null; silverChange: number | null
-  error?: string
-}
-
 interface MarketData {
-  crypto: CryptoData
-  forex: ForexData
-  metals: MetalsData
+  crypto: { btcUSD: number; ethUSD: number; btcCAD: number; ethCAD: number; btcChange: number | null; ethChange: number | null; error?: string }
+  forex: { usdCAD: number; usdCNY: number; cadCNY: number; usdJPY: number; eurUSD: number; error?: string }
+  metals: { goldPrice: number; silverPrice: number; goldChange: number | null; silverChange: number | null; error?: string }
+  volatility: { vix: number; vixChange: number | null; vxn: number; vxnChange: number | null; error?: string }
+  oil: { brentPrice: number; brentChange: number | null; brentDate: string; error?: string }
   timestamp: string
 }
 
@@ -120,6 +103,27 @@ export default function Home() {
             : <>
                 <Item label="Gold" value={'$' + fmt(data.metals.goldPrice, 2)} change={data.metals.goldChange} />
                 <Item label="Silver" value={'$' + fmt(data.metals.silverPrice, 2)} change={data.metals.silverChange} />
+              </>
+          }
+        </div>
+
+        <div className="card">
+          <div className="card-title">📈 Volatility</div>
+          {!data ? <div className="loading-text">Fetching...</div>
+            : data.volatility.error ? <div className="error-text">{data.volatility.error}</div>
+            : <>
+                <Item label="VIX" value={fmt(data.volatility.vix, 2)} change={data.volatility.vixChange} />
+                <Item label="VXN" value={fmt(data.volatility.vxn, 2)} change={data.volatility.vxnChange} />
+              </>
+          }
+        </div>
+
+        <div className="card">
+          <div className="card-title">🛢️ Oil</div>
+          {!data ? <div className="loading-text">Fetching...</div>
+            : data.oil.error ? <div className="error-text">{data.oil.error}</div>
+            : <>
+                <Item label="Brent Crude" value={'$' + fmt(data.oil.brentPrice, 2) + '/bbl'} change={data.oil.brentChange} />
               </>
           }
         </div>
