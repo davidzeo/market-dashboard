@@ -26,20 +26,22 @@ export async function GET() {
     result.forex = { error: e instanceof Error ? e.message : 'Failed' }
   }
 
-  // Crypto
+  // Crypto — Binance (reliable, no API key, generous rate limits)
   try {
     const cryptoData = await fetchJSON(
-      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true'
+      'https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22%5D'
     )
-    const btcUSD = cryptoData.bitcoin.usd
-    const ethUSD = cryptoData.ethereum.usd
+    const btc = cryptoData.find((t: { symbol: string }) => t.symbol === 'BTCUSDT')
+    const eth = cryptoData.find((t: { symbol: string }) => t.symbol === 'ETHUSDT')
+    const btcUSD = parseFloat(btc.lastPrice)
+    const ethUSD = parseFloat(eth.lastPrice)
     result.crypto = {
       btcUSD,
       ethUSD,
       btcCAD: Math.round(btcUSD * cadRate * 100) / 100,
       ethCAD: Math.round(ethUSD * cadRate * 100) / 100,
-      btcChange: cryptoData.bitcoin.usd_24h_change ?? null,
-      ethChange: cryptoData.ethereum.usd_24h_change ?? null,
+      btcChange: parseFloat(btc.priceChangePercent),
+      ethChange: parseFloat(eth.priceChangePercent),
     }
   } catch (e: unknown) {
     result.crypto = { error: e instanceof Error ? e.message : 'Failed' }
