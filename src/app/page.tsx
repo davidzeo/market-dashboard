@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 
 interface MarketData {
   crypto: { btcUSD: number; ethUSD: number; btcCAD: number; ethCAD: number; btcChange: number | null; ethChange: number | null; error?: string }
-  forex: { usdCAD: number; usdCNY: number; cadCNY: number; usdJPY: number; eurUSD: number; error?: string }
+  forex: { dxy: number | null; usdCAD: number; usdCNY: number; cadCNY: number; usdJPY: number; eurUSD: number; error?: string }
   metals: { goldPrice: number; silverPrice: number; goldChange: number | null; silverChange: number | null; error?: string }
   volatility: { vix: number; vixChange: number | null; vxn: number; vxnChange: number | null; error?: string }
   oil: { brentPrice: number; brentChange: number | null; brentDate: string; error?: string }
@@ -87,6 +87,7 @@ export default function Home() {
           {!data ? <div className="loading-text">Fetching...</div>
             : data.forex.error ? <div className="error-text">{data.forex.error}</div>
             : <>
+                <Item label="USD Index" value={fmt(data.forex.dxy, 3)} />
                 <Item label="USD/CAD" value={fmt(data.forex.usdCAD, 4)} />
                 <Item label="USD/CNY" value={fmt(data.forex.usdCNY, 4)} />
                 <Item label="CAD/CNY" value={fmt(data.forex.cadCNY, 4)} />

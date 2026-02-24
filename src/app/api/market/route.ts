@@ -9,18 +9,53 @@ async function fetchJSON(url: string) {
 export async function GET() {
   const result: Record<string, unknown> = { timestamp: new Date().toISOString() }
 
-  // Forex
+  // Forex — Swissquote (real-time bid/ask)
   let cadRate = 1.44
   try {
-    const forexData = await fetchJSON('https://open.er-api.com/v6/latest/USD')
-    const r = forexData.rates
-    cadRate = r.CAD
+    const SQ = 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument'
+    const [cadData, cnhData, jpyData, eurData, gbpData, sekData, chfData] = await Promise.all([
+      fetchJSON(`${SQ}/USD/CAD`),
+      fetchJSON(`${SQ}/USD/CNH`),
+      fetchJSON(`${SQ}/USD/JPY`),
+      fetchJSON(`${SQ}/EUR/USD`),
+      fetchJSON(`${SQ}/GBP/USD`),
+      fetchJSON(`${SQ}/USD/SEK`),
+      fetchJSON(`${SQ}/USD/CHF`),
+    ])
+    const mid = (d: unknown[]) => {
+      const p = (d[0] as Record<string, unknown>)?.spreadProfilePrices as { bid: number; ask: number }[] | undefined
+      if (!p?.[0]) return null
+      return (p[0].bid + p[0].ask) / 2
+    }
+    const usdCAD = mid(cadData)
+    const usdCNH = mid(cnhData)
+    const usdJPY = mid(jpyData)
+    const eurUSD = mid(eurData)
+    const gbpUSD = mid(gbpData)
+    const usdSEK = mid(sekData)
+    const usdCHF = mid(chfData)
+    if (usdCAD) cadRate = usdCAD
+
+    // ICE US Dollar Index (DXY) formula
+    let dxy: number | null = null
+    if (eurUSD && usdJPY && gbpUSD && usdCAD && usdSEK && usdCHF) {
+      dxy = Math.round(50.14348112
+        * Math.pow(eurUSD, -0.576)
+        * Math.pow(usdJPY, 0.136)
+        * Math.pow(gbpUSD, -0.119)
+        * Math.pow(usdCAD, 0.091)
+        * Math.pow(usdSEK, 0.042)
+        * Math.pow(usdCHF, 0.036)
+        * 1000) / 1000
+    }
+
     result.forex = {
-      usdCAD: r.CAD,
-      usdCNY: r.CNY,
-      cadCNY: Math.round((r.CNY / r.CAD) * 10000) / 10000,
-      usdJPY: r.JPY,
-      eurUSD: Math.round((1 / r.EUR) * 10000) / 10000,
+      dxy,
+      usdCAD: usdCAD ? Math.round(usdCAD * 10000) / 10000 : null,
+      usdCNY: usdCNH ? Math.round(usdCNH * 10000) / 10000 : null,
+      cadCNY: usdCNH && usdCAD ? Math.round((usdCNH / usdCAD) * 10000) / 10000 : null,
+      usdJPY: usdJPY ? Math.round(usdJPY * 100) / 100 : null,
+      eurUSD: eurUSD ? Math.round(eurUSD * 10000) / 10000 : null,
     }
   } catch (e: unknown) {
     result.forex = { error: e instanceof Error ? e.message : 'Failed' }
