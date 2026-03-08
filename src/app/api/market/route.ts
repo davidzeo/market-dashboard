@@ -119,19 +119,18 @@ export async function GET() {
     result.volatility = { error: e instanceof Error ? e.message : 'Failed' }
   }
 
-  // Brent Oil — EIA (daily, free demo key)
+  // Brent Oil — Swissquote (real-time)
   try {
     const oilData = await fetchJSON(
-      'https://api.eia.gov/v2/petroleum/pri/spt/data/?api_key=DEMO_KEY&frequency=daily&data[0]=value&facets[product][]=EPCBRENT&sort[0][column]=period&sort[0][direction]=desc&length=2'
+      'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/OIL/USD'
     )
-    const rows = oilData.response?.data
-    if (rows && rows.length > 0) {
-      const latest = parseFloat(rows[0].value)
-      const prev = rows.length > 1 ? parseFloat(rows[1].value) : null
+    const oilBid = oilData[0]?.spreadProfilePrices?.[0]?.bid
+    const oilAsk = oilData[0]?.spreadProfilePrices?.[0]?.ask
+    if (oilBid && oilAsk) {
       result.oil = {
-        brentPrice: latest,
-        brentChange: prev ? Math.round(((latest - prev) / prev) * 10000) / 100 : null,
-        brentDate: rows[0].period,
+        brentPrice: Math.round(((oilBid + oilAsk) / 2) * 100) / 100,
+        brentChange: null,
+        brentDate: new Date().toISOString().slice(0, 10),
       }
     } else {
       result.oil = { error: 'No data' }
